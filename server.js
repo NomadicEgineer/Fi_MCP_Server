@@ -9,7 +9,6 @@ const credentials = require("./credentials.json");
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static("public")); // Optional
 
 // ✅ Health Check
 app.get("/", (req, res) => {
@@ -51,7 +50,13 @@ app.post("/api/login", (req, res) => {
   }
 });
 
+// ✅ Global error handler
+app.use((err, req, res, next) => {
+  console.error("❌ Uncaught Error:", err.stack);
+  res.status(500).json({ error: "Something went wrong!" });
+});
+
 // ✅ Start server
 app.listen(PORT, () => {
-  console.log(`✅ MCP server running at http://localhost:${PORT}`);
+  console.log(`✅ MCP server running on port ${PORT}`);
 });
