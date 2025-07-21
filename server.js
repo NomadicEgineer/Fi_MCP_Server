@@ -40,10 +40,10 @@ app.post("/api/login", (req, res) => {
     files.forEach((file) => {
       const filePath = path.join(userDir, file);
       const content = fs.readFileSync(filePath, "utf-8");
-      data[file] = JSON.parse(content);
+      data[file.replace(".json", "")] = JSON.parse(content);
     });
 
-    return res.status(200).json({ files: data });
+    return res.status(200).json({ data });
   } catch (err) {
     console.error("❌ Error reading files:", err.message);
     return res.status(500).json({ error: "Error reading user data." });
