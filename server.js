@@ -3,37 +3,35 @@ const fs = require("fs");
 const path = require("path");
 
 const app = express();
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
-app.set("view engine", "ejs");
-app.use(express.static("public")); // optional if you add custom CSS
-
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 const credentials = require("./credentials.json");
 
-// 👉 Render Login Form
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.static("public")); // Optional
+
+// ✅ Health Check
 app.get("/", (req, res) => {
-  res.render("login", { error: null });
+  res.json({ message: "Mock Fi MCP server is running 🚀" });
 });
 
-// 👉 Handle Login
+// ✅ POST /api/login - Authenticate and return mock financial data
 app.post("/api/login", (req, res) => {
-  console.log("the object is " , req.body);
   const { mobile, password } = req.body;
 
   if (!mobile || !password) {
-    return res.render("login", { error: "Mobile and Password are required." });
+    return res.status(400).json({ error: "Mobile and Password are required." });
   }
 
   if (credentials[mobile] !== password) {
-    return res.render("login", { error: "Invalid mobile number or password." });
+    return res.status(401).json({ error: "Invalid mobile number or password." });
   }
 
   const userDir = path.join(__dirname, "data", mobile);
 
   if (!fs.existsSync(userDir)) {
-    return res.render("login", { error: "User data not found." });
+    return res.status(404).json({ error: "User data not found." });
   }
 
   try {
@@ -46,15 +44,14 @@ app.post("/api/login", (req, res) => {
       data[file] = JSON.parse(content);
     });
 
-    res.send({
-      files: data
-    });
+    return res.status(200).json({ files: data });
   } catch (err) {
-    console.error(err);
-    res.render("login", { error: "Error reading user data." });
+    console.error("❌ Error reading files:", err.message);
+    return res.status(500).json({ error: "Error reading user data." });
   }
 });
 
+// ✅ Start server
 app.listen(PORT, () => {
-  console.log(`MCP server running at http://localhost:${PORT}`);
+  console.log(`✅ MCP server running at http://localhost:${PORT}`);
 });
